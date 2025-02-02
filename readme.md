@@ -1,0 +1,1 @@
+# Vampires Nx VMS plugin
