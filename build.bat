@@ -37,7 +37,7 @@ echo on
 rmdir /S /Q "%BUILD_DIR%" 2>NUL
 @echo off
 
-cmake "%BASE_DIR%\samples" -B "%BUILD_DIR%" %GENERATOR_OPTIONS% %* || @exit /b
+cmake "%BASE_DIR%" -B "%BUILD_DIR%" %GENERATOR_OPTIONS% %* || @exit /b
 cmake --build "%BUILD_DIR%" || @exit /b
 
 :: Run unit tests if needed.

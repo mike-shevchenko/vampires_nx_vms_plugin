@@ -56,7 +56,7 @@ BUILD_DIR="${BASE_DIR}-build"
 # Clean up the build dir and build the samples.
 (set -x #< Log each command.
     rm -rf "${BUILD_DIR}/"
-    cmake "${BASE_DIR}/samples" -B "${BUILD_DIR}" \
+    cmake "${BASE_DIR}" -B "${BUILD_DIR}" \
         ${GEN_OPTIONS[@]+"${GEN_OPTIONS[@]}"} `#< allow empty array #` \
         "${EXTRA_CMAKE_ARGS[@]+"${EXTRA_CMAKE_ARGS[@]}"}" `#< allow empty array #`
     cmake --build "${BUILD_DIR}" \
