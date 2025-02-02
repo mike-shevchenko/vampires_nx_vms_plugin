@@ -6,21 +6,8 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "One of [Debug Release RelWithDebInf
 
 project(server_sdk_samples)
 
-set(QT_DIR "" CACHE PATH "Path to installed Qt Conan package.")
-set(QT_HOST_PATH "" CACHE PATH "Path to installed Qt Host Conan package.")
-
-set(rpiFirmware "" CACHE STRING
-    "Path to Raspberry Pi libraries containing bcm_host and openmaxil.")
-
 #--------------------------------------------------------------------------------------------------
 # Set up global settings - C++ standard, rpath, find third-party libraries, etc.
-
-if(QT_DIR AND QT_HOST_PATH)
-    list(APPEND CMAKE_PREFIX_PATH ${QT_DIR})
-
-    find_package(Qt6Core REQUIRED)
-    find_package(Qt6Network REQUIRED)
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -99,7 +86,3 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../unit_tests ${CMAKE_CURRENT_BINARY_
 # Define samples.
 
 add_subdirectory(analytics samples/analytics)
-add_subdirectory(cloud_storage samples/cloud_storage)
-add_subdirectory(device samples/device)
-add_subdirectory(storage samples/storage)
-add_subdirectory(combined samples/combined)
