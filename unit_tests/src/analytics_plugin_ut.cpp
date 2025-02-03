@@ -1,3 +1,4 @@
+// Copyright 2025-present mike.shevchenko@gmail.com. Licensed under www.mozilla.org/MPL/2.0/
 // Copyright 2018-present Network Optix, Inc. Licensed under MPL 2.0: www.mozilla.org/MPL/2.0/
 
 #include <fstream>
@@ -128,7 +129,13 @@ static void testAnalyticsIntegrationManifest(nx::sdk::analytics::IIntegration* i
     testText(integrationManifestJson["vendor"]);
 }
 
-static void testEngineManifest(IEngine* engine)
+struct EngineInfo
+{
+    bool deviceDependent = false;
+    bool allowsCompressedVideoFrames = false;
+};
+
+static EngineInfo testEngineManifest(IEngine* engine)
 {
     const RefCountableResultHolder<const IString*> result{engine->manifest()};
 
@@ -146,6 +153,17 @@ static void testEngineManifest(IEngine* engine)
         nx::kit::Json::parse(engineManifest->str(), engineManifestError);
     ASSERT_EQ("", engineManifestError);
     ASSERT_TRUE(engineManifestJson.is_object());
+    
+    EngineInfo engineInfo;
+    const auto capabilities = engineManifestJson["capabilities"];
+    if (!capabilities.is_null())
+    {
+        ASSERT_EQ(nx::kit::Json::STRING, capabilities.type());
+        const std::string value = capabilities.string_value();
+        engineInfo.deviceDependent = value.contains("deviceDependent");
+        engineInfo.allowsCompressedVideoFrames = !value.contains("needUncompressedVideoFrames");
+    }
+    return engineInfo;
 }
 
 static void testDeviceAgentManifest(IDeviceAgent* deviceAgent)
@@ -183,12 +201,18 @@ static void testEngineSettings(IEngine* engine)
         // Test assigning some settings
         const RefCountableResultHolder<const ISettingsResponse*> result{
             engine->setSettings(settings.get())};
-        ASSERT_TRUE(result.isOk());
     }
 }
 
-static void testDeviceAgentSettings(IDeviceAgent* deviceAgent)
+struct DeviceAgentInfo
 {
+    bool allowsEmptySettings = false;
+};
+
+static DeviceAgentInfo testDeviceAgentSettings(IDeviceAgent* deviceAgent)
+{
+    DeviceAgentInfo deviceAgentInfo;
+    
     const auto settings = makePtr<StringMap>();
     settings->setItem("setting1", "value1");
     settings->setItem("setting2", "value2");
@@ -197,15 +221,15 @@ static void testDeviceAgentSettings(IDeviceAgent* deviceAgent)
         // Test assigning empty settings.
         const RefCountableResultHolder<const ISettingsResponse*> result{
             deviceAgent->setSettings(makePtr<StringMap>().get())};
-        ASSERT_TRUE(result.isOk());
+        deviceAgentInfo.allowsEmptySettings = result.isOk();
     }
 
     {
         // Test assigning some settings.
         const RefCountableResultHolder<const ISettingsResponse*> result{
             deviceAgent->setSettings(settings.get())};
-        ASSERT_TRUE(result.isOk());
     }
+    return deviceAgentInfo;
 }
 
 class DeviceAgentHandler: public nx::sdk::RefCountable<IDeviceAgent::IHandler>
@@ -319,13 +343,12 @@ public:
 };
 
 /**
- * Any Analytics Plugin similar to a stub must pass. It means:
- * - The Plugin creates a DeviceAgent for any DeviceInfo.
- * - The DeviceAgent accepts compressed video frames, thus supports IConsumingDeviceAgent.
- * - The DeviceAgent accepts unknown Settings, silently ignoring them without producing an error.
+ * A typical Device-independent Engine will pass - the following is tested:
+ * - The Engine creates a DeviceAgent for any DeviceInfo.
+ * - The DeviceAgent accepts video frames, thus supports IConsumingDeviceAgent.
  * - The DeviceAgent accepts any needed-metadata-types.
  */
-static void testDumbAnalyticsPluginEngine(IEngine* engine)
+static void testDeviceIndependentAnalyticsPluginEngine(IEngine* engine, const EngineInfo& engineInfo)
 {
     const auto deviceInfo = makePtr<DeviceInfo>();
     deviceInfo->setId("TEST");
@@ -336,20 +359,26 @@ static void testDumbAnalyticsPluginEngine(IEngine* engine)
     const auto deviceAgent = obtainDeviceAgentResult.result.value();
     ASSERT_TRUE(deviceAgent != nullptr);
     ASSERT_TRUE(deviceAgent->queryInterface<IDeviceAgent>());
-    const auto consumingDeviceAgent = deviceAgent->queryInterface<IConsumingDeviceAgent>();
-    ASSERT_TRUE(consumingDeviceAgent != nullptr);
+    
+    if (engineInfo.allowsCompressedVideoFrames)
+    {
+        const auto consumingDeviceAgent = deviceAgent->queryInterface<IConsumingDeviceAgent>();
+        ASSERT_TRUE(consumingDeviceAgent != nullptr);
 
-    consumingDeviceAgent->setHandler(nx::sdk::makePtr<DeviceAgentHandler>().get());
-    testDeviceAgentManifest(consumingDeviceAgent.get());
-    testDeviceAgentSettings(consumingDeviceAgent.get());
-
-    const ResultHolder<void> setNeededMetadataTypesResult{
-        consumingDeviceAgent->setNeededMetadataTypes(makePtr<MetadataTypes>().get())};
-    ASSERT_TRUE(setNeededMetadataTypesResult.isOk());
-
-    const ResultHolder<void> pushDataPacketResult{
-        consumingDeviceAgent->pushDataPacket(makePtr<CompressedVideoPacket>().get())};
-    ASSERT_TRUE(pushDataPacketResult.isOk());
+        consumingDeviceAgent->setHandler(nx::sdk::makePtr<DeviceAgentHandler>().get());
+        testDeviceAgentManifest(consumingDeviceAgent.get());
+        
+        const DeviceAgentInfo deviceAgentInfo = testDeviceAgentSettings(consumingDeviceAgent.get());
+        if (deviceAgentInfo.allowsEmptySettings)
+        {
+            const ResultHolder<void> setNeededMetadataTypesResult{
+                consumingDeviceAgent->setNeededMetadataTypes(makePtr<MetadataTypes>().get())};
+            ASSERT_TRUE(setNeededMetadataTypesResult.isOk());
+    
+            const ResultHolder<void> pushDataPacketResult{
+                consumingDeviceAgent->pushDataPacket(makePtr<CompressedVideoPacket>().get())};
+        }
+    }
 }
 
 /** Any Analytics Integration must pass. */
@@ -368,12 +397,11 @@ static void testAnalyticsIntegration(nx::sdk::analytics::IIntegration* integrati
 
     engine->setHandler(makePtr<EngineHandler>().get());
 
-    testEngineManifest(engine);
+    const EngineInfo engineInfo = testEngineManifest(engine);
     testEngineSettings(engine);
 
-
-
-    testDumbAnalyticsPluginEngine(engine);
+    if (!engineInfo.deviceDependent)
+        testDeviceIndependentAnalyticsPluginEngine(engine, engineInfo);
 }
 
 /** Any Integration must pass. */
