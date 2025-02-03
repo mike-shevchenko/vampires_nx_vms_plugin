@@ -1,3 +1,24 @@
+# Vampires Nx VMS Plugin
+
+// Copyright 2025-present mike.shevchenko@gmail.com. Licensed under www.mozilla.org/MPL/2.0/
+
+This package contains the implementation of a game in the form of a plugin for the Nx VMS Server.
+The package is based on the Nx Server Plugin SDK; the source code of the plugin is located in the
+`plugin/` directory. The plugin should work for the Nx VMS 6.0 and later.
+
+Technically the game is implemented as an Analytics Plugin, where the game field is drawn above the
+video via Object Metadata rectangles - the field is a grid of cells where each may be empty or
+contain a game item represented as a rectangle with the a color corresponding to the item type.
+
+To control the game, the user must connect to the socket opened by the plugin via a tool like
+NetCat - nc, ncat, or a Windows tool included in this package - ms_netcat located in the
+`ms_netcat/` directory. See the instructions on the stderr of the Server.
+
+Details of the game play are described in the Device Agent settings.
+
+Below is the original readme of the Nx Server Plugin SDK.
+===================================================================================================
+
 # Nx SDKs
 
 // Copyright 2018-present Network Optix, Inc. Licensed under MPL 2.0: www.mozilla.org/MPL/2.0/

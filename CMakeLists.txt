@@ -1,10 +1,11 @@
+## Copyright 2025-present mike.shevchenko@gmail.com. Licensed under www.mozilla.org/MPL/2.0/
 ## Copyright 2018-present Network Optix, Inc. Licensed under MPL 2.0: www.mozilla.org/MPL/2.0/
 
 cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "One of [Debug Release RelWithDebInfo MinSizeRel].")
 
-project(server_sdk_samples)
+project(vampies_nx_vms_plugin)
 
 #--------------------------------------------------------------------------------------------------
 # Set up global settings - C++ standard, rpath, find third-party libraries, etc.
@@ -51,7 +52,7 @@ enable_testing()
 
 set(nxSdkDir "" CACHE PATH "Path to unpacked Server Plugin SDK zip.")
 if(nxSdkDir STREQUAL "")
-    # Assume building samples inside the SDK.
+    # Assume building plugins inside the SDK.
     set(nxSdkDir ${CMAKE_CURRENT_LIST_DIR})
     if(NOT EXISTS ${nxSdkDir}/src/nx/sdk OR NOT EXISTS ${nxSdkDir}/nx_kit/src/nx/kit)
         message(FATAL_ERROR "Define nxSdkDir cache variable to point to the unzipped SDK.")
@@ -83,4 +84,11 @@ target_compile_definitions(nx_sdk PUBLIC NX_PLUGIN_API=${API_EXPORT_MACRO}) #< f
 
 add_subdirectory(unit_tests)
 
-add_subdirectory(samples)
+if(WIN32)
+    add_subdirectory(ms_netcat)
+endif()
+
+add_subdirectory(plugin)
+
+## Build plugins included in the SDK as samples.
+#add_subdirectory(samples)
