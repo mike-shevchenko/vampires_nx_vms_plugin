@@ -10,3 +10,5 @@ target_link_libraries(sample_analytics_plugin_integration PUBLIC nx_sdk)
 
 add_library(sample_analytics_plugin SHARED "plugin/plugin.cpp")
 target_link_libraries(sample_analytics_plugin PRIVATE sample_analytics_plugin_integration)
+
+add_plugin_to_analytics_plugin_ut_cfg(sample_analytics_plugin ${CMAKE_CURRENT_BINARY_DIR})

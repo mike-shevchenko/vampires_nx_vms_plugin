@@ -18,6 +18,8 @@ if(NOT WIN32)
     target_link_libraries(stub_analytics_plugin PRIVATE pthread)
 endif()
 
+add_plugin_to_analytics_plugin_ut_cfg(stub_analytics_plugin ${CMAKE_CURRENT_BINARY_DIR})
+
 #--------------------------------------------------------------------------------------------------
 # Copy object_streamer files.
 
