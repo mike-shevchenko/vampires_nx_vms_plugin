@@ -1,6 +1,6 @@
 ## Copyright 2018-present Network Optix, Inc. Licensed under MPL 2.0: www.mozilla.org/MPL/2.0/
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "One of [Debug Release RelWithDebInfo MinSizeRel].")
 
@@ -9,7 +9,7 @@ project(server_sdk_samples)
 #--------------------------------------------------------------------------------------------------
 # Set up global settings - C++ standard, rpath, find third-party libraries, etc.
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -27,6 +27,7 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 # Use all CPU cores by MSVC.
 if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
     string(APPEND CMAKE_CXX_FLAGS " /MP")
     # Do not create separate .pdb files for object files (workaround for mspdbsrv.exe bug, needed
     # for using "/MP" flag).

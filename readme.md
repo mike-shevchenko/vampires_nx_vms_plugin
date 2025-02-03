@@ -85,7 +85,7 @@ For every type of plugin there are some samples. They can be compiled and linked
 
 Prerequisites:
 ```
-- CMake >= 3.14
+- CMake >= 3.15
 - Windows (7, 10 or 11): Microsoft Visual Studio >= 2019
     - ATTENTION: When linking to the C++ runtime dynamically (Visual Studio does it by default),
         avoid using the latest build tools (toolset) to avoid crashes - see the details in
